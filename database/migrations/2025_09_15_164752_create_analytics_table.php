@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('user_analytics', function (Blueprint $table) {
+        Schema::create('doorman_user_analytics', function (Blueprint $table) {
             $table->id();
             $table->string('ip_hash');
             $table->date('date');
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('user_analytics');
+        Schema::dropIfExists('doorman_user_analytics');
     }
 };

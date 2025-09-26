@@ -11,7 +11,7 @@ class UserAnalytic extends Model
 {
     use HasFactory;
 
-    protected $table = 'user_analytics';
+    protected $table = 'doorman_user_analytics';
 
     protected $fillable = [
         'identifier',
