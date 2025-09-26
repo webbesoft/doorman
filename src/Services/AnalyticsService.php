@@ -16,7 +16,7 @@ class AnalyticsService
         $today = now()->format('Y-m-d H:i:s');
         $page = $request->path();
         $ref = $request->headers->get('referer') ?? null;
-        $country = IPGeolocationService::getLocationData($request->ip())['country'] ?? 'Unknown';
+        $country = data_get(IPGeolocationService::getLocationData($request->ip()), 'country', 'Unknown');
 
         if ($identifier) {
             $this->recordVisit($identifier['value'], $identifier['type'], $today, $page, $ref, $country);
@@ -68,9 +68,9 @@ class AnalyticsService
         UserAnalytic::updateOrCreate(
             [
                 'identifier' => $identifier,
+                'identifier_type' => $type,
             ],
             [
-                'identifier_type' => $type,
                 'date' => $date,
                 'page' => $page ?? '/',
                 'ref' => $ref,
