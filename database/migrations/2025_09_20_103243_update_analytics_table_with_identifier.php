@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('user_analytics', function (Blueprint $table) {
+        Schema::table('doorman_user_analytics', function (Blueprint $table) {
             $table->dropUnique(['ip_hash', 'date']);
             $table->dropColumn('ip_hash');
             $table->string('identifier');
@@ -20,7 +20,7 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::table('user_analytics', function (Blueprint $table) {
+        Schema::table('doorman_user_analytics', function (Blueprint $table) {
             $table->string('ip_hash');
             $table->dropUnique(['identifier', 'identifier_type', 'date']);
             $table->dropColumn('identifier');

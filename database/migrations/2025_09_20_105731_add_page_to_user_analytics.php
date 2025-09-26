@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('user_analytics', function (Blueprint $table) {
+        Schema::table('doorman_user_analytics', function (Blueprint $table) {
             $table->string('page')->default('/');
         });
     }
 
     public function down()
     {
-        Schema::table('user_analytics', function (Blueprint $table) {
+        Schema::table('doorman_user_analytics', function (Blueprint $table) {
             $table->dropColumn('page');
         });
     }
