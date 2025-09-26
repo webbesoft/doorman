@@ -4,10 +4,13 @@ namespace Webbesoft\Doorman\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class UserAnalytic extends Model
 {
+    use HasFactory;
+
     protected $table = 'user_analytics';
 
     protected $fillable = [

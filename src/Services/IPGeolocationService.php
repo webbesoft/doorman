@@ -10,25 +10,28 @@ class IPGeolocationService
     {
         $client = new \GuzzleHttp\Client;
         $obfuscatedIP = substr($ip, 0, strrpos($ip, '.')).'.0';
-        $response = Cache::remember("ip_geo_{$obfuscatedIP}", 86400, function () use ($client, $ip) {
-            return $client->get("http://ip-api.com/json/{$ip}");
+
+        $data = Cache::remember("ip_geo_{$obfuscatedIP}", 86400, function () use ($client, $ip) {
+            $response = $client->get("http://ip-api.com/json/{$ip}");
+
+            if ($response->getStatusCode() === 200) {
+                $decoded = json_decode($response->getBody()->getContents(), true);
+                if ($decoded && $decoded['status'] === 'success') {
+                    return [
+                        'country' => $decoded['country'] ?? 'Unknown',
+                        'region' => $decoded['regionName'] ?? 'Unknown',
+                        'city' => $decoded['city'] ?? 'Unknown',
+                    ];
+                }
+            }
+
+            return [
+                'country' => 'Unknown',
+                'region' => 'Unknown',
+                'city' => 'Unknown',
+            ];
         });
 
-        if ($response->getStatusCode() === 200) {
-            $data = json_decode($response->getBody()->getContents(), true);
-            if ($data && $data['status'] === 'success') {
-                return [
-                    'country' => $data['country'] ?? 'Unknown',
-                    'region' => $data['regionName'] ?? 'Unknown',
-                    'city' => $data['city'] ?? 'Unknown',
-                ];
-            }
-        }
-
-        return [
-            'country' => 'Unknown',
-            'region' => 'Unknown',
-            'city' => 'Unknown',
-        ];
+        return $data;
     }
 }
