@@ -15,9 +15,11 @@ class AnalyticsService
         $identifier = $this->getUniqueIdentifier($request);
         $today = now()->format('Y-m-d H:i:s');
         $page = $request->path();
+        $ref = $request->headers->get('referer') ?? null;
+        $country = IPGeolocationService::getLocationData($request->ip())['country'] ?? 'Unknown';
 
         if ($identifier) {
-            $this->recordVisit($identifier['value'], $identifier['type'], $today, $page);
+            $this->recordVisit($identifier['value'], $identifier['type'], $today, $page, $ref, $country);
         }
     }
 
@@ -27,7 +29,6 @@ class AnalyticsService
      */
     protected function getUniqueIdentifier(Request $request): ?array
     {
-        // Priority 1: Authenticated user
         if (Auth::check()) {
             return [
                 'value' => (string) Auth::id(),
@@ -35,7 +36,6 @@ class AnalyticsService
             ];
         }
 
-        // Priority 2: Session ID (for guests with sessions)
         if ($request->hasSession() && $request->session()->getId()) {
             return [
                 'value' => $request->session()->getId(),
@@ -43,7 +43,6 @@ class AnalyticsService
             ];
         }
 
-        // Priority 3: Obfuscated IP address
         if ($request->ip()) {
             return [
                 'value' => $this->obfuscateIp($request->ip()),
@@ -59,12 +58,12 @@ class AnalyticsService
      */
     protected function obfuscateIp(string $ip): string
     {
-        $salt = config('app.key').now()->format('Y-m-d');
+        $truncatedIp = preg_replace('/\.\d+$/', '.0', $ip);
 
-        return hash('sha256', $ip.$salt);
+        return hash_hmac('sha256', $truncatedIp, config('app.key'));
     }
 
-    protected function recordVisit(string $identifier, string $type, string $date, string $page): void
+    protected function recordVisit(string $identifier, string $type, string $date, string $page, ?string $ref, ?string $country): void
     {
         UserAnalytic::updateOrCreate(
             [
@@ -74,6 +73,8 @@ class AnalyticsService
                 'identifier_type' => $type,
                 'date' => $date,
                 'page' => $page ?? '/',
+                'ref' => $ref,
+                'country' => $country,
             ]
         );
 

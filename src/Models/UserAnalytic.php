@@ -15,6 +15,8 @@ class UserAnalytic extends Model
         'identifier_type',
         'date',
         'page',
+        'ref',
+        'country',
     ];
 
     protected $casts = [
@@ -53,6 +55,16 @@ class UserAnalytic extends Model
     public function scopeThisMonth(Builder $query): Builder
     {
         return $query->byDateRange(now()->startOfMonth(), now()->endOfMonth());
+    }
+
+    public function scopeWhereCountry(Builder $query, string $country): Builder
+    {
+        return $query->where('country', $country);
+    }
+
+    public function scopeWhereRef(Builder $query, string $ref): Builder
+    {
+        return $query->where('ref', $ref);
     }
 
     // Static helper methods

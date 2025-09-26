@@ -4,6 +4,7 @@ namespace Webbesoft\Doorman\Filament\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Webbesoft\Doorman\Models\UserAnalytic;
 use Webbesoft\Doorman\Services\AnalyticsService;
 
 class AnalyticsStatsWidget extends BaseWidget
@@ -12,6 +13,7 @@ class AnalyticsStatsWidget extends BaseWidget
 
     protected function getStats(): array
     {
+        $period = $this->getDateRange();
         $analyticsService = app(AnalyticsService::class);
         $todayStats = $analyticsService->getTodayStats();
         $weeklyGrowth = $analyticsService->getWeeklyGrowth();
@@ -31,6 +33,16 @@ class AnalyticsStatsWidget extends BaseWidget
                 ->description('Anonymous visitors today')
                 ->descriptionIcon('heroicon-m-user-group')
                 ->color('primary'),
+
+            $this->getTopCountryStat($period),
+        ];
+    }
+
+    protected function getDateRange(): array
+    {
+        return [
+            'start' => now()->subDays(30)->startOfDay(),
+            'end' => now()->endOfDay(),
         ];
     }
 
@@ -71,5 +83,27 @@ class AnalyticsStatsWidget extends BaseWidget
         }
 
         return 'gray';
+    }
+
+    protected function getTopCountryStat(array $period): Stat
+    {
+        $topCountry = UserAnalytic::whereBetween('date', [$period['start'], $period['end']])
+            ->whereNotNull('country')
+            ->where('country', '!=', 'Unknown')
+            ->selectRaw('country, COUNT(DISTINCT identifier) as visitors')
+            ->groupBy('country')
+            ->orderByDesc('visitors')
+            ->first();
+
+        if (! $topCountry) {
+            return Stat::make('Top Country', 'No data')
+                ->description('No country data available')
+                ->color('gray');
+        }
+
+        return Stat::make('Top Country', $topCountry->country)
+            ->description(number_format($topCountry->visitors).' unique visitors')
+            ->descriptionIcon('heroicon-m-globe-alt')
+            ->color('primary');
     }
 }

@@ -9,7 +9,7 @@
   ],
   "type": "library",
   "require": {
-    "php": "8.4.12",
+    "php": "^8.4",
     "illuminate/support": "^12.28",
     "laravel/pint": "^1.25",
     "filament/widgets": "^4"
@@ -45,6 +45,10 @@
     "psr-4": {
       "Webbesoft\\Doorman\\Tests\\": "tests/"
     }
+  },
+  "scripts": {
+    "test": "pest",
+    "test-coverage": "pest --coverage"
   },
   "extra": {
     "laravel": {
