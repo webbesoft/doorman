@@ -14,7 +14,7 @@ class IPGeolocationService
             $obfuscatedIP = substr($ip, 0, strrpos($ip, '.')).'.0';
 
             $data = Cache::remember("ip_geo_{$obfuscatedIP}", 86400, function () use ($client, $ip) {
-                $response = $client->get("http://ip-api.com/json/{$ip}");
+                $response = $client->get("http://ip-api.com/json/{$ip}?fields=status,country,regionName,city");
 
                 if ($response->getStatusCode() === 200) {
                     $decoded = json_decode($response->getBody()->getContents(), true);

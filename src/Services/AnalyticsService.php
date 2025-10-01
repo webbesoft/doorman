@@ -5,6 +5,7 @@ namespace Webbesoft\Doorman\Services;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Webbesoft\Doorman\Classes\Dto\UserAnalyticDTO;
 use Webbesoft\Doorman\Models\PageVisit;
 use Webbesoft\Doorman\Models\UserAnalytic;
 
@@ -12,14 +13,11 @@ class AnalyticsService
 {
     public function track(Request $request): void
     {
-        $identifier = $this->getUniqueIdentifier($request);
-        $today = now()->format('Y-m-d H:i:s');
-        $page = $request->path();
-        $ref = $request->headers->get('referer') ?? null;
-        $country = data_get(IPGeolocationService::getLocationData($request->ip()), 'country', 'Unknown');
+        $userAnalyticDto = new UserAnalyticDTO($this);
+        $userAnalyticDto->fromRequest($request);
 
-        if ($identifier) {
-            $this->recordVisit($identifier['value'], $identifier['type'], $today, $page, $ref, $country);
+        if ($userAnalyticDto->identifier) {
+            $this->recordVisit($userAnalyticDto);
         }
     }
 
@@ -27,7 +25,7 @@ class AnalyticsService
      * Get the best unique identifier for the visitor
      * Priority: user_id > session_id > hashed_ip
      */
-    protected function getUniqueIdentifier(Request $request): ?array
+    public function getUniqueIdentifier(Request $request): ?array
     {
         if (Auth::check()) {
             return [
@@ -63,26 +61,26 @@ class AnalyticsService
         return hash_hmac('sha256', $truncatedIp, config('app.key'));
     }
 
-    protected function recordVisit(string $identifier, string $type, string $date, string $page, ?string $ref, ?string $country): void
+    protected function recordVisit(UserAnalyticDTO $user_analytic_dto): void
     {
         UserAnalytic::updateOrCreate(
             [
-                'identifier' => $identifier,
-                'identifier_type' => $type,
+                'identifier' => $user_analytic_dto->identifier['value'],
+                'identifier_type' => $user_analytic_dto->identifier['type'],
             ],
             [
-                'date' => $date,
-                'page' => $page ?? '/',
-                'ref' => $ref,
-                'country' => $country,
+                'date' => $user_analytic_dto->today->toDateString(),
+                'page' => $user_analytic_dto->page,
+                'ref' => $user_analytic_dto->ref,
+                'country' => $user_analytic_dto->country,
             ]
         );
 
         PageVisit::create([
-            'page' => $page ?? '/',
-            'visited_at' => $date,
-            'identifier' => $identifier,
-            'identifier_type' => $type,
+            'page' => $user_analytic_dto->page,
+            'visited_at' => $user_analytic_dto->today,
+            'identifier' => $user_analytic_dto->identifier['value'],
+            'identifier_type' => $user_analytic_dto->identifier['type'],
         ]);
     }
 
